@@ -1,0 +1,21 @@
+{
+  "name": "accmenu",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "mocha"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^11.2.0",
+    "spectron": "^13.0.0"
+  },
+  "dependencies": {
+    "@octokit/rest": "^18.0.12",
+    "mocha": "^8.2.1"
+  }
+}
