@@ -23,6 +23,12 @@ For basic executable file we could use
 npx electron-packager . evergreen-app --out dist/
 ```
 
+Another example setting up an icon and overwriting previous versions of the executable 
+
+```shell
+npx electron-packager . --out dist/ --overwrite --icon=assets/img/logo.ico
+```
+
 Also, it is possible to generate windows .exe file with following command.
 
 ```shell
