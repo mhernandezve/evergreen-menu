@@ -7,6 +7,14 @@ const assetsDirectory = join(__dirname, 'assets')
 
 let tray = undefined
 let window = undefined
+let statusWindow = undefined
+
+var ipc = require('electron').ipcMain;
+
+ipc.on('invokeAction', function(event, data){
+    var result = processData(data);
+    event.sender.send('actionReply', result);
+});
 
 function createWindow() {
     const win = new BrowserWindow({
@@ -18,7 +26,8 @@ function createWindow() {
         resizable: false,
         transparent: true,
         webPreferences: {
-            nodeIntegration: true
+            nodeIntegration: true,
+            contextIsolation: true
         },
     })
 
@@ -36,10 +45,11 @@ const showNotification = async () => {
 
 const createTray = () => {
     tray = new Tray(join(assetsDirectory, 'flagTemplate.png'))
-    tray.on('right-click', showNotification)
+    tray.on('right-clthe ick', showNotification)
     tray.on('double-click', showWindow)
     tray.on('click', function(event) {
-        showNotification()
+        // showNotification()
+        toggleStatusWindow()
         // if (window.isVisible() && process.defaultApp && event.metaKey) {
         //     window.openDevTools({mode: 'detach'})
         // }
@@ -76,5 +86,69 @@ app.on('ready', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         createWindow()
         createTray()
+        createStatusWindow()
     }
 })
+
+
+/* status windows */
+const path = require('path')
+
+const getStatusWindowPosition = () => {
+  const windowBounds = statusWindow.getBounds()
+  const trayBounds = tray.getBounds()
+
+  // Center window horizontally below the tray icon
+  const x = Math.round(trayBounds.x + (trayBounds.width / 2) - (windowBounds.width / 2))
+
+  // Position window 4 pixels vertically below the tray icon
+  const y = Math.round(trayBounds.y + trayBounds.height + 4)
+
+  return {x: x, y: y}
+}
+
+const createStatusWindow = () => {
+  statusWindow = new BrowserWindow({
+    width: 300,
+    height: 450,
+    show: false,
+    frame: false,
+    fullscreenable: false,
+    resizable: false,
+    transparent: true,
+    webPreferences: {
+      // Prevents renderer process code from not running when window is
+      // hidden
+      backgroundThrottling: false
+    }
+  })
+  statusWindow.loadURL(`file://${path.join(__dirname, 'status-window.html')}`)
+
+  statusWindow.webContents.on('did-finish-load', ()=>{
+      let code = "var btn-close = document.getElementById('btn-close'); btn-close.addEventListener('click',function(){alert('clicked!');});";
+              statusWindow.webContents.executeJavaScript(code);
+  });
+
+  // Hide the window when it loses focus
+  statusWindow.on('blur', () => {
+    if (!statusWindow.webContents.isDevToolsOpened()) {
+      statusWindow.hide()
+    }
+  })
+}
+
+const toggleStatusWindow = () => {
+  if (statusWindow.isVisible()) {
+    statusWindow.hide()
+  } else {
+    showStatusWindow()
+  }
+}
+
+const showStatusWindow = () => {
+  const position = getStatusWindowPosition()
+  statusWindow.setPosition(position.x, position.y, false)
+  statusWindow.show()
+  statusWindow.focus()
+}
+
